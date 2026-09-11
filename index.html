@@ -1,0 +1,1152 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1"><style>:root{color-scheme:light}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}</style></head><body>
+<title>HBA Production</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@200;300;400;500;600;700;800&display=swap">
+
+<style>
+/* ── TOKENS ── */
+:root {
+  --bg:         #000;
+  --surface:    #0A0A0A;
+  --surface-hi: #151515;
+  --border:     #1E1E1E;
+  --border-2:   #2E2E2E;
+  --text-1:     #FFF;
+  --text-2:     #888;
+  --text-3:     #444;
+  --bg-inv:     #FFF;
+  --text-inv:   #000;
+
+  --sec-pad: clamp(5rem,10vw,9rem);
+  --wrap:    1280px;
+  --gutter:  clamp(1.5rem,5vw,4rem);
+
+  --t-hero: clamp(5.5rem,17vw,17rem);
+  --t-h2:   clamp(2.5rem,5vw,5rem);
+  --t-h3:   clamp(1.1rem,2.2vw,1.9rem);
+  --t-body: 1.0625rem;
+  --t-sm:   0.875rem;
+  --t-xs:   0.6875rem;
+
+  /* Helvetica Now Display — falls to Helvetica Neue on Mac, Plus Jakarta Sans elsewhere */
+  --font: 'Helvetica Now Display','Helvetica Neue',Helvetica,'Plus Jakarta Sans',Arial,sans-serif;
+}
+
+/* ── RESET ── */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text-1);font-family:var(--font);font-weight:400;line-height:1.65;overflow-x:hidden}
+img,video{display:block;max-width:100%}
+a{color:inherit;text-decoration:none}
+button{cursor:pointer;border:none;background:none;font:inherit;color:inherit}
+ul{list-style:none}
+
+/* Grain */
+body::after{
+  content:'';position:fixed;inset:0;
+  background-image:url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='400' height='400'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.72' numOctaves='4' stitchTiles='stitch'/></filter><rect width='400' height='400' filter='url(%23n)'/></svg>");
+  background-size:220px;opacity:.02;pointer-events:none;z-index:9000;
+}
+
+/* ── LAYOUT ── */
+.wrap{max-width:var(--wrap);margin:0 auto;padding:0 var(--gutter)}
+.sec{padding:var(--sec-pad) 0}
+
+/* ── LABELS ── */
+.lbl{
+  font-family:var(--font);font-size:var(--t-xs);
+  letter-spacing:.2em;text-transform:uppercase;
+  color:var(--text-3);font-weight:600;
+}
+
+/* ── REVEAL ANIMATIONS ── */
+.rv{
+  opacity:0;transform:translateY(1.75rem);
+  transition:opacity .85s cubic-bezier(.16,1,.3,1) var(--d,0s),
+             transform .85s cubic-bezier(.16,1,.3,1) var(--d,0s);
+}
+.rv.on{opacity:1;transform:none}
+
+.rv-up{
+  opacity:0;transform:translateY(3rem);
+  transition:opacity 1s cubic-bezier(.16,1,.3,1) var(--d,0s),
+             transform 1s cubic-bezier(.16,1,.3,1) var(--d,0s);
+}
+.rv-up.on{opacity:1;transform:none}
+
+@media(prefers-reduced-motion:reduce){
+  .rv,.rv-up,.hero-l{opacity:1;transform:none;transition:none}
+}
+
+/* ── NAV ── */
+.nav{
+  position:fixed;top:0;left:0;right:0;z-index:200;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:1.75rem var(--gutter);
+  transition:background .35s,padding .35s,border-color .35s;
+  border-bottom:1px solid transparent;
+}
+.nav.stuck{
+  background:rgba(0,0,0,.92);backdrop-filter:blur(14px);
+  padding-top:.95rem;padding-bottom:.95rem;
+  border-bottom-color:var(--border);
+}
+.nav-mark{font-size:.72rem;font-weight:800;letter-spacing:.2em;text-transform:uppercase}
+.nav-links{display:flex;gap:2.25rem}
+.nav-links a{font-size:.8125rem;font-weight:300;letter-spacing:.03em;color:var(--text-2);transition:color .2s}
+.nav-links a:hover{color:var(--text-1)}
+.nav-btn{
+  font-size:.62rem;font-weight:700;letter-spacing:.18em;text-transform:uppercase;
+  border:1px solid rgba(255,255,255,.2);padding:.5rem 1.2rem;
+  transition:background .2s,color .2s,border-color .2s;
+}
+.nav-btn:hover{background:var(--text-1);color:var(--bg);border-color:var(--text-1)}
+
+/* ── HERO ── */
+.hero{
+  position:relative;min-height:100svh;
+  display:flex;flex-direction:column;
+  overflow:hidden;isolation:isolate;
+}
+.hero-video{
+  position:absolute;inset:0;z-index:0;overflow:hidden;pointer-events:none;
+}
+.hero-video video{
+  position:absolute;inset:0;
+  width:100%;height:100%;
+  object-fit:cover;
+  pointer-events:none;
+}
+.hero-overlay{
+  position:absolute;inset:0;z-index:1;pointer-events:none;
+  background:linear-gradient(
+    to bottom,
+    rgba(0,0,0,.55) 0%,
+    rgba(0,0,0,.25) 35%,
+    rgba(0,0,0,.35) 65%,
+    rgba(0,0,0,.7)  100%
+  );
+}
+.hero-body{
+  position:relative;z-index:2;
+  flex:1;display:flex;flex-direction:column;justify-content:flex-end;
+  padding:0 var(--gutter) clamp(3rem,6vh,5rem);
+}
+.hero-eye{display:flex;align-items:center;gap:.75rem;margin-bottom:.4rem}
+.hero-eye-rule{width:2rem;height:1px;background:var(--text-3)}
+
+/* Signature: massive weight-800 Helvetica — the design statement */
+.hero-name{
+  font-size:var(--t-hero);font-weight:800;
+  line-height:.88;letter-spacing:-.045em;
+  color:var(--text-1);margin-bottom:.07em;user-select:none;
+}
+.hero-l{
+  display:inline-block;opacity:0;
+  transform:translateY(.07em);
+  transition:opacity .6s cubic-bezier(.16,1,.3,1),transform .6s cubic-bezier(.16,1,.3,1);
+}
+.hero-l.on{opacity:1;transform:none}
+
+.hero-sub{
+  font-size:clamp(.62rem,1.1vw,.82rem);font-weight:200;
+  letter-spacing:.5em;text-transform:uppercase;
+  color:var(--text-3);
+  opacity:0;transition:opacity .7s ease .7s;
+  margin-bottom:clamp(1.5rem,3vw,2.5rem);
+}
+.hero-sub.on{opacity:1}
+
+.hero-foot{
+  display:flex;align-items:flex-end;justify-content:space-between;gap:2rem;
+  opacity:0;transition:opacity .7s ease 1.05s;
+}
+.hero-foot.on{opacity:1}
+
+.hero-line{
+  font-size:clamp(.95rem,1.7vw,1.3rem);font-weight:300;
+  color:var(--text-2);max-width:32ch;line-height:1.5;
+}
+.hero-line em{font-style:normal;color:var(--text-1);font-weight:500}
+
+.scroll-cue{display:flex;flex-direction:column;align-items:center;gap:.4rem;color:var(--text-3)}
+.scroll-cue-txt{font-size:.54rem;font-weight:700;letter-spacing:.22em;text-transform:uppercase;writing-mode:vertical-rl}
+.scroll-cue-bar{width:1px;height:3rem;background:var(--border);position:relative;overflow:hidden}
+.scroll-cue-bar::after{
+  content:'';position:absolute;top:-100%;left:0;right:0;height:100%;
+  background:var(--text-1);animation:scrollbar 2.2s ease-in-out infinite;
+}
+@keyframes scrollbar{0%{top:-100%}50%,100%{top:100%}}
+
+/* ── MARQUEE — inverted white band ── */
+.mqsec{
+  background:var(--bg-inv);
+  border-top:1px solid #E0E0E0;border-bottom:1px solid #E0E0E0;
+  padding:.9rem 0;overflow:hidden;
+}
+.mq{display:flex;animation:mq 30s linear infinite;width:max-content}
+@keyframes mq{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+.mq-item{
+  font-size:.62rem;font-weight:700;letter-spacing:.22em;text-transform:uppercase;
+  color:#B0B0B0;white-space:nowrap;padding:0 2rem;
+}
+.mq-item.ac{color:var(--text-inv)}
+.mq-sep{width:3px;height:3px;border-radius:50%;background:#CCC;flex-shrink:0;align-self:center;margin:0 .15rem}
+
+/* ── ABOUT ── */
+.about-grid{display:grid;grid-template-columns:1fr 1fr;gap:clamp(3rem,7vw,7rem);align-items:start}
+.about-stmt{
+  font-size:var(--t-h2);font-weight:800;line-height:1.0;
+  letter-spacing:-.04em;color:var(--text-1);text-wrap:balance;
+}
+.about-stmt em{font-style:normal;font-weight:200}
+.about-rhs{display:flex;flex-direction:column;gap:1.75rem;padding-top:.25rem}
+.about-body{font-size:var(--t-body);font-weight:300;color:var(--text-2);line-height:1.78;max-width:46ch}
+.about-rule{width:3rem;height:1px;background:var(--border)}
+.ghost-link{
+  display:inline-flex;align-items:center;gap:.75rem;
+  font-size:.68rem;font-weight:700;letter-spacing:.18em;text-transform:uppercase;
+  color:var(--text-1);transition:gap .3s;
+}
+.ghost-link:hover{gap:1.25rem}
+
+/* ── SERVICES ── */
+.sec-hdr{
+  display:flex;align-items:flex-end;justify-content:space-between;gap:2rem;
+  margin-bottom:clamp(2.5rem,4.5vw,4rem);
+}
+.sec-title{font-size:var(--t-h2);font-weight:800;line-height:1.0;letter-spacing:-.04em}
+.srv-grid{
+  display:grid;grid-template-columns:1fr 1fr;
+  gap:1px;background:var(--border);border:1px solid var(--border);
+}
+.srv{
+  background:var(--bg);padding:clamp(2rem,4vw,3rem);
+  position:relative;overflow:hidden;transition:background .3s;
+}
+/* Top-accent line reveals on hover */
+.srv::before{
+  content:'';
+  position:absolute;top:0;left:0;right:0;height:2px;
+  background:var(--text-1);z-index:2;
+  transform:scaleX(0);transform-origin:left;
+  transition:transform .45s cubic-bezier(.16,1,.3,1);
+}
+.srv:hover{background:var(--surface-hi)}
+.srv:hover::before{transform:scaleX(1)}
+.srv:hover .srv-ghost{color:rgba(255,255,255,.04)}
+
+.srv-ghost{
+  font-size:clamp(5rem,10vw,9rem);font-weight:800;
+  line-height:1;color:var(--border);
+  position:absolute;z-index:0;top:-.08em;right:.12em;
+  transition:color .3s;pointer-events:none;user-select:none;
+}
+.srv-body{position:relative;z-index:1}
+.srv-name{
+  font-size:clamp(1.1rem,2vw,1.6rem);font-weight:700;
+  color:var(--text-1);margin:.85rem 0 .65rem;line-height:1.2;letter-spacing:-.02em;
+}
+.srv-desc{font-size:var(--t-sm);font-weight:300;color:var(--text-2);line-height:1.72;max-width:34ch}
+.srv-tags{display:flex;flex-wrap:wrap;gap:.4rem;margin-top:1.25rem}
+.srv-tag{
+  font-size:.55rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--text-3);border:1px solid var(--border);padding:.22rem .55rem;
+}
+
+/* ── WORK ITEMS — cinematic scroll ── */
+.work-sec{padding-bottom:0}
+.work-items{display:flex;flex-direction:column}
+.wk{
+  position:relative;
+  height:clamp(480px,88vh,1000px);
+  overflow:hidden;
+  border-bottom:1px solid rgba(255,255,255,.04);
+}
+.wk-vis{
+  position:absolute;
+  inset:-12% 0;
+  will-change:transform;
+}
+.wk-bg{position:absolute;inset:0}
+.wk-vis iframe{
+  position:absolute;inset:0;width:100%;height:100%;
+  border:0;display:block;pointer-events:none;
+}
+.wk-vis video{
+  position:absolute;inset:0;width:100%;height:100%;
+  object-fit:cover;display:block;pointer-events:none;
+}
+.wk-over{
+  position:absolute;inset:0;z-index:1;
+  background:
+    linear-gradient(to bottom,
+      rgba(0,0,0,.55) 0%,
+      rgba(0,0,0,.05) 28%,
+      rgba(0,0,0,.05) 52%,
+      rgba(0,0,0,.7) 78%,
+      rgba(0,0,0,.94) 100%);
+}
+.wk-body{
+  position:absolute;inset:0;z-index:2;
+  display:flex;flex-direction:column;
+  justify-content:space-between;
+  padding:clamp(1.5rem,3vw,2.75rem);
+}
+.wk-top{display:flex;justify-content:space-between;align-items:flex-start}
+.wk-n{
+  font-size:clamp(5rem,12vw,13rem);
+  font-weight:800;color:rgba(255,255,255,.032);
+  line-height:1;letter-spacing:-.06em;
+  user-select:none;pointer-events:none;
+}
+.wk-tag{
+  font-size:.5rem;font-weight:700;letter-spacing:.2em;
+  text-transform:uppercase;color:rgba(255,255,255,.28);
+  text-align:right;line-height:2;
+}
+.wk-bot{display:flex;justify-content:space-between;align-items:flex-end}
+.wk-title{
+  font-size:clamp(2.4rem,6.5vw,8rem);
+  font-weight:800;letter-spacing:-.045em;
+  line-height:.93;color:#fff;
+  transform:translateY(2.5rem);opacity:0;
+  transition:transform .95s cubic-bezier(.16,1,.3,1),opacity .95s;
+}
+.wk.vis .wk-title{transform:none;opacity:1}
+.wk-yr{
+  font-size:.6rem;font-weight:300;
+  color:rgba(255,255,255,.28);letter-spacing:.12em;
+  transform:translateY(1.5rem);opacity:0;
+  transition:transform .95s cubic-bezier(.16,1,.3,1) .14s,opacity .95s .14s;
+  align-self:flex-end;padding-bottom:.35rem;
+}
+.wk.vis .wk-yr{transform:none;opacity:1}
+@media(max-width:640px){
+  .wk{height:72vh;min-height:380px}
+  .wk-n{font-size:clamp(4rem,18vw,6rem)}
+  .wk-title{font-size:clamp(2rem,9vw,3.2rem)}
+}
+@media(prefers-reduced-motion:reduce){
+  .wk-title,.wk-yr{transition:none;transform:none;opacity:1}
+}
+
+/* B&W gradient stills — tonal variety */
+.wi1 {background:linear-gradient(145deg,#4A4A4A 0%,#8A8A8A 100%)}
+.wi2 {background:linear-gradient(145deg,#070707 0%,#1A1A1A 100%)}
+.wi3 {background:linear-gradient(145deg,#0E0E0E 0%,#2A2A2A 100%)}
+.wi4 {background:linear-gradient(145deg,#030303 0%,#111 100%)}
+.wi5 {background:linear-gradient(145deg,#ADADAD 0%,#E5E5E5 100%)}
+.wi6 {background:linear-gradient(145deg,#1A1A1A 0%,#3E3E3E 100%)}
+.wi7 {background:linear-gradient(145deg,#2E2E2E 0%,#5E5E5E 100%)}
+.wi8 {background:linear-gradient(145deg,#080808 0%,#1E1E1E 100%)}
+.wi9 {background:linear-gradient(145deg,#8E8E8E 0%,#D2D2D2 100%)}
+.wi10{background:linear-gradient(145deg,#181818 0%,#3A3A3A 100%)}
+.wi11{background:linear-gradient(145deg,#050505 0%,#161616 100%)}
+.wi12{background:linear-gradient(145deg,#555 0%,#AAAAAA 100%)}
+
+/* ── STATS — inverted white section ── */
+.stats-sec{
+  background:var(--bg-inv);
+  border-top:1px solid #E0E0E0;border-bottom:1px solid #E0E0E0;
+}
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr)}
+.stat{
+  padding:clamp(2.5rem,5vw,4rem) clamp(1.5rem,2.5vw,2.5rem);
+  border-right:1px solid #DDD;text-align:center;
+}
+.stat:last-child{border-right:none}
+.stat-n{
+  display:block;
+  font-size:clamp(3rem,6vw,5.5rem);font-weight:800;
+  color:var(--text-inv);line-height:1;letter-spacing:-.05em;
+}
+.stat-lbl{
+  display:block;margin-top:.65rem;
+  font-size:.6rem;font-weight:700;letter-spacing:.2em;text-transform:uppercase;
+  color:#999;
+}
+
+/* ── INDUSTRIES & CAPABILITIES ── */
+.ind-sec{border-top:1px solid var(--border)}
+
+.ind-blk{border-bottom:1px solid var(--border)}
+
+.ind-label-row{
+  display:flex;align-items:baseline;justify-content:space-between;gap:1rem;
+  margin-bottom:clamp(1.75rem,3.5vw,2.75rem);
+}
+
+/* Large flowing tag text */
+.tagflow{
+  display:flex;flex-wrap:wrap;align-items:baseline;
+  gap:0;
+}
+.tf-item{
+  font-size:clamp(1.75rem,4vw,3.5rem);font-weight:800;
+  letter-spacing:-.03em;color:var(--text-1);
+  line-height:1.2;cursor:default;
+  transition:opacity .2s;
+}
+.tf-item:hover{opacity:.25}
+.tf-sep{
+  font-size:clamp(1.75rem,4vw,3.5rem);
+  color:var(--text-3);padding:0 .45rem;
+  line-height:1.2;font-weight:200;
+}
+
+/* Deliverables — lighter weight */
+.tagflow.sm .tf-item{font-size:clamp(1.15rem,2.5vw,2.25rem);font-weight:300;letter-spacing:-.01em}
+.tagflow.sm .tf-sep{font-size:clamp(1.15rem,2.5vw,2.25rem)}
+
+/* Industry list / We Do — two columns */
+.ind-cols{display:grid;grid-template-columns:1fr 1fr;gap:clamp(3rem,6vw,6rem)}
+.ind-col-eyebrow{display:block;margin-bottom:.6rem}
+.ind-col-head{
+  font-size:var(--t-h3);font-weight:700;letter-spacing:-.025em;
+  color:var(--text-1);margin-bottom:2rem;
+}
+.ind-list{display:flex;flex-direction:column}
+.ind-li{
+  font-size:clamp(.95rem,1.7vw,1.4rem);font-weight:300;
+  color:var(--text-2);
+  padding:.8rem 0;border-bottom:1px solid var(--border);
+  transition:color .2s,padding-left .25s;cursor:default;
+}
+.ind-li:last-child{border-bottom:none}
+.ind-li:hover{color:var(--text-1);padding-left:.65rem}
+
+/* 02 — We Do: large impactful stacked bold */
+.wedo-list{display:flex;flex-direction:column;gap:.2rem}
+.wedo-item{
+  font-size:clamp(2rem,4.5vw,4.25rem);font-weight:800;
+  letter-spacing:-.04em;line-height:1.1;
+  color:var(--border);cursor:default;
+  transition:color .25s;
+}
+.wedo-item:hover{color:var(--text-1)}
+
+/* ── PROCESS ── */
+.proc-grid{
+  display:grid;grid-template-columns:repeat(4,1fr);
+  border-top:1px solid var(--border);
+}
+.proc-step{
+  padding:clamp(2rem,3.5vw,3rem) clamp(1.25rem,2.5vw,2.5rem);
+  border-right:1px solid var(--border);
+}
+.proc-step:last-child{border-right:none}
+.proc-num{
+  display:block;font-size:.62rem;font-weight:700;letter-spacing:.2em;
+  color:var(--text-3);margin-bottom:1.75rem;
+}
+.proc-title{
+  font-size:var(--t-h3);font-weight:700;letter-spacing:-.025em;
+  color:var(--text-1);line-height:1.2;margin-bottom:.75rem;
+}
+.proc-desc{font-size:var(--t-sm);font-weight:300;color:var(--text-2);line-height:1.72}
+
+/* ── CONTACT ── */
+.cta-sec{background:var(--surface);border-top:1px solid var(--border)}
+.cta-grid{display:grid;grid-template-columns:1.1fr 1fr;gap:clamp(4rem,9vw,9rem);align-items:start}
+.cta-hl{
+  font-size:var(--t-h2);font-weight:800;line-height:.98;
+  letter-spacing:-.045em;color:var(--text-1);
+  margin-bottom:2.25rem;text-wrap:balance;
+}
+.cta-hl em{font-style:normal;font-weight:200}
+.cta-info{display:flex;flex-direction:column;gap:1.5rem}
+.ci-lbl{margin-bottom:.3rem}
+.ci-val{font-size:var(--t-body);font-weight:300;color:var(--text-2);line-height:1.6}
+.ci-val a{color:var(--text-1);transition:color .2s}
+.ci-val a:hover{color:var(--text-2)}
+
+/* Form */
+.form{display:flex;flex-direction:column;gap:1rem}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:.75rem}
+.fg{display:flex;flex-direction:column;gap:.3rem}
+.flbl{
+  font-size:.58rem;font-weight:700;letter-spacing:.18em;text-transform:uppercase;
+  color:var(--text-3);
+}
+.fi,.fta,.fsel{
+  background:var(--bg);border:1px solid var(--border);
+  color:var(--text-1);font-family:var(--font);font-size:.9375rem;font-weight:300;
+  padding:.8rem .95rem;width:100%;
+  appearance:none;-webkit-appearance:none;transition:border-color .2s;
+}
+.fi::placeholder,.fta::placeholder{color:var(--text-3)}
+.fi:focus,.fta:focus,.fsel:focus{outline:none;border-color:rgba(255,255,255,.3)}
+.fta{resize:vertical;min-height:7rem;line-height:1.6}
+.fsel-wrap{position:relative}
+.fsel-wrap::after{
+  content:'↓';position:absolute;right:.9rem;top:50%;transform:translateY(-50%);
+  font-size:.62rem;font-weight:800;color:var(--text-3);pointer-events:none;
+}
+.fsel option{background:var(--bg);color:var(--text-1)}
+.fsub{
+  font-size:.65rem;font-weight:800;letter-spacing:.2em;text-transform:uppercase;
+  background:var(--text-1);color:var(--bg);padding:.9rem 1.75rem;
+  align-self:flex-start;transition:opacity .2s;
+}
+.fsub:hover{opacity:.78}
+
+/* ── FOOTER ── */
+.footer{border-top:1px solid var(--border)}
+.footer-top{
+  display:flex;align-items:flex-end;justify-content:space-between;gap:2rem;
+  padding:clamp(3rem,5vw,4.5rem) 0 clamp(2rem,3.5vw,3rem);
+  border-bottom:1px solid var(--border);margin-bottom:1.75rem;
+}
+.footer-wm{
+  font-size:clamp(2.5rem,6vw,5rem);font-weight:800;
+  letter-spacing:-.05em;color:var(--text-1);line-height:1;
+}
+.footer-nav{display:flex;flex-direction:column;gap:.55rem;align-items:flex-end}
+.footer-nav a{font-size:.875rem;font-weight:300;color:var(--text-2);transition:color .2s}
+.footer-nav a:hover{color:var(--text-1)}
+.footer-btm{
+  display:flex;align-items:center;justify-content:space-between;gap:2rem;
+  padding-bottom:clamp(2rem,3vw,2.5rem);
+}
+.footer-copy{font-size:.58rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--text-3)}
+.footer-social{display:flex;gap:1.75rem}
+.footer-social a{
+  font-size:.58rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--text-3);transition:color .2s;
+}
+.footer-social a:hover{color:var(--text-1)}
+
+/* ── RESPONSIVE ── */
+@media(max-width:960px){
+  .about-grid,.cta-grid{grid-template-columns:1fr}
+  .srv-grid{grid-template-columns:1fr}
+  .stats-row{grid-template-columns:1fr 1fr}
+  .proc-grid{grid-template-columns:1fr 1fr}
+  .ind-cols{grid-template-columns:1fr;gap:3rem}
+  .nav-links{display:none}
+  .footer-top{flex-direction:column;align-items:flex-start}
+  .footer-nav{align-items:flex-start}
+}
+@media(max-width:720px){
+  .wc:nth-child(n){grid-column:span 12}
+  .work-grid{gap:.5rem}
+  .sec-hdr{flex-direction:column;align-items:flex-start}
+}
+@media(max-width:560px){
+  .stat{border-right:none;border-bottom:1px solid #DDD}
+  .stat:last-child{border-bottom:none}
+  .proc-grid{grid-template-columns:1fr}
+  .proc-step{border-right:none;border-bottom:1px solid var(--border)}
+  .proc-step:last-child{border-bottom:none}
+  .form-row{grid-template-columns:1fr}
+  .footer-btm{flex-direction:column;align-items:flex-start}
+  .wedo-item{font-size:clamp(1.5rem,8vw,3rem)}
+  .tf-item{font-size:clamp(1.25rem,5.5vw,2.5rem)}
+}
+</style>
+
+<!-- ──── HTML ──── -->
+
+<header>
+  <nav class="nav" id="nav" role="navigation" aria-label="Main">
+    <a href="#" class="nav-mark">HBA — Production</a>
+    <ul class="nav-links" role="list">
+      <li><a href="#work">Work</a></li>
+      <li><a href="#services">Services</a></li>
+      <li><a href="#capabilities">Capabilities</a></li>
+      <li><a href="#about">About</a></li>
+      <li><a href="#contact">Contact</a></li>
+    </ul>
+    <a href="#contact" class="nav-btn">Start a Project</a>
+  </nav>
+</header>
+
+<main>
+
+<!-- ── HERO ── -->
+<section class="hero" aria-label="Introduction">
+  <div class="hero-video">
+    <video autoplay muted loop playsinline preload="auto" aria-hidden="true">
+      <source src="videos/hero.mp4" type="video/mp4">
+    </video>
+  </div>
+  <div class="hero-overlay"></div>
+  <div class="hero-body">
+    <div class="hero-eye">
+      <div class="hero-eye-rule" aria-hidden="true"></div>
+      <span class="lbl" style="color:var(--text-3)">Media Production · Việt Nam</span>
+    </div>
+    <h1 class="hero-name" aria-label="HBA">
+      <span class="hero-l" data-i="0">H</span><span class="hero-l" data-i="1">B</span><span class="hero-l" data-i="2">A</span>
+    </h1>
+    <div class="hero-sub" id="hs" aria-hidden="true">Production</div>
+    <div class="hero-foot" id="hf">
+      <p class="hero-line">Stories that <em>move people.</em><br>Crafted for brands that demand more.</p>
+      <div class="scroll-cue" aria-hidden="true">
+        <span class="scroll-cue-txt">Scroll</span>
+        <div class="scroll-cue-bar"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── MARQUEE — white band ── -->
+<div class="mqsec" aria-hidden="true">
+  <div class="mq" role="presentation">
+    <span class="mq-item">Filmmaking</span><span class="mq-sep"></span>
+    <span class="mq-item ac">Photography</span><span class="mq-sep"></span>
+    <span class="mq-item">Design</span><span class="mq-sep"></span>
+    <span class="mq-item ac">Marketing Strategy</span><span class="mq-sep"></span>
+    <span class="mq-item">Brand Films</span><span class="mq-sep"></span>
+    <span class="mq-item ac">TVC</span><span class="mq-sep"></span>
+    <span class="mq-item">Live Events</span><span class="mq-sep"></span>
+    <span class="mq-item ac">Post Production</span><span class="mq-sep"></span>
+    <span class="mq-item">Filmmaking</span><span class="mq-sep"></span>
+    <span class="mq-item ac">Photography</span><span class="mq-sep"></span>
+    <span class="mq-item">Design</span><span class="mq-sep"></span>
+    <span class="mq-item ac">Marketing Strategy</span><span class="mq-sep"></span>
+    <span class="mq-item">Brand Films</span><span class="mq-sep"></span>
+    <span class="mq-item ac">TVC</span><span class="mq-sep"></span>
+    <span class="mq-item">Live Events</span><span class="mq-sep"></span>
+    <span class="mq-item ac">Post Production</span><span class="mq-sep"></span>
+  </div>
+</div>
+
+<!-- ── ABOUT ── -->
+<section class="sec" id="about">
+  <div class="wrap">
+    <div class="about-grid">
+      <div>
+        <div class="rv" style="--d:.05s"><span class="lbl" style="display:block;margin-bottom:1.5rem;font-size:var(--t-h2);font-weight:800;letter-spacing:-.04em;line-height:1.0;text-transform:none;color:var(--text-1)">About the Studio</span></div>
+        <h2 class="about-stmt rv" style="--d:.1s">Born in<br><em>Việt Nam,</em><br>built for the world.</h2>
+      </div>
+      <div class="about-rhs">
+        <p class="about-body rv" style="--d:.16s">HBA Production is a full-service creative studio based in Hồ Chí Minh City. We partner with brands, agencies, and enterprises to create visual content that earns attention — filmmaking, photography, design, and marketing strategy executed to international standards.</p>
+        <p class="about-body rv" style="--d:.23s">Every project is approached with one intent: to make something that outlasts the brief. From a single TVC to an end-to-end brand identity, we bring precision and purpose to every frame.</p>
+        <div class="about-rule rv" style="--d:.29s"></div>
+        <a href="#work" class="ghost-link rv" style="--d:.33s">View our work →</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── SERVICES ── -->
+<section class="sec" id="services" style="padding-top:0">
+  <div class="wrap">
+    <div class="sec-hdr">
+      <div class="rv">
+        <span class="lbl" style="display:block;margin-bottom:.6rem">What We Do</span>
+        <h2 class="sec-title">Our capabilities</h2>
+      </div>
+      <p class="rv" style="--d:.1s;font-size:var(--t-sm);font-weight:300;color:var(--text-2);max-width:26ch;line-height:1.6;text-align:right">
+        From concept to final delivery — everything in house.
+      </p>
+    </div>
+    <div class="srv-grid">
+      <!-- F — Filmmaking -->
+      <article class="srv rv">
+        <span class="srv-ghost" aria-hidden="true">F</span>
+        <div class="srv-body">
+          <span class="lbl">Filmmaking</span>
+          <h3 class="srv-name">Cinematic storytelling at every scale</h3>
+          <p class="srv-desc">End-to-end production for brand films, TV commercials, and narrative content — scripted, cast, shot, and finished by our in-house team.</p>
+          <div class="srv-tags">
+            <span class="srv-tag">TVC</span>
+            <span class="srv-tag">Brand Film</span>
+            <span class="srv-tag">Corporate</span>
+            <span class="srv-tag">Documentary</span>
+          </div>
+        </div>
+      </article>
+      <!-- P — Photography -->
+      <article class="srv rv" style="--d:.08s">
+        <span class="srv-ghost" aria-hidden="true">P</span>
+        <div class="srv-body">
+          <span class="lbl">Photography</span>
+          <h3 class="srv-name">Image systems built to last</h3>
+          <p class="srv-desc">Editorial, product, lifestyle, and campaign photography. We build image systems that hold up across every platform, format, and season.</p>
+          <div class="srv-tags">
+            <span class="srv-tag">Editorial</span>
+            <span class="srv-tag">Product</span>
+            <span class="srv-tag">Lifestyle</span>
+            <span class="srv-tag">Campaign</span>
+          </div>
+        </div>
+      </article>
+      <!-- D — Design -->
+      <article class="srv rv" style="--d:.14s">
+        <span class="srv-ghost" aria-hidden="true">D</span>
+        <div class="srv-body">
+          <span class="lbl">Design</span>
+          <h3 class="srv-name">Visual identity with intention</h3>
+          <p class="srv-desc">Brand identity, art direction, and graphic design. Every visual decision made in service of communicating who you are and why it matters.</p>
+          <div class="srv-tags">
+            <span class="srv-tag">Brand Identity</span>
+            <span class="srv-tag">Art Direction</span>
+            <span class="srv-tag">Graphic Design</span>
+            <span class="srv-tag">Print</span>
+          </div>
+        </div>
+      </article>
+      <!-- M — Marketing Strategy -->
+      <article class="srv rv" style="--d:.2s">
+        <span class="srv-ghost" aria-hidden="true">M</span>
+        <div class="srv-body">
+          <span class="lbl">Marketing Strategy</span>
+          <h3 class="srv-name">Strategy that connects and converts</h3>
+          <p class="srv-desc">Campaign planning, content strategy, and distribution. We help brands reach the right audience with the right message at the right moment.</p>
+          <div class="srv-tags">
+            <span class="srv-tag">Campaign Planning</span>
+            <span class="srv-tag">Content Strategy</span>
+            <span class="srv-tag">Social Media</span>
+            <span class="srv-tag">Distribution</span>
+          </div>
+        </div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ── WORK — 12 projects ── -->
+<section class="sec work-sec" id="work">
+  <div class="wrap">
+    <div class="sec-hdr">
+      <div class="rv">
+        <span class="lbl" style="display:block;margin-bottom:.6rem">Selected Work</span>
+        <h2 class="sec-title">Recent projects</h2>
+      </div>
+    </div>
+  </div>
+  <div class="work-items">
+  <div class="wk" data-video="" data-vid-key="tsn" data-mode="landscape" data-title="Tan Son Nhat Golf">
+    <div class="wk-vis"><div class="wk-bg wi6"></div></div>
+    <div class="wk-over"></div>
+    <div class="wk-body">
+      <div class="wk-top"><div class="wk-n">01</div><div class="wk-tag">Commercial</div></div>
+      <div class="wk-bot"><h3 class="wk-title">Tan Son Nhat<br>Golf</h3><div class="wk-yr">2026</div></div>
+    </div>
+  </div>
+  <div class="wk" data-video="" data-vid-key="franklin" data-mode="portrait" data-title="Franklin Pickleball">
+    <div class="wk-vis"><div class="wk-bg wi1"></div></div>
+    <div class="wk-over"></div>
+    <div class="wk-body">
+      <div class="wk-top"><div class="wk-n">02</div><div class="wk-tag">Commercial<br>Marketing</div></div>
+      <div class="wk-bot"><h3 class="wk-title">Franklin<br>Pickleball</h3><div class="wk-yr">2025</div></div>
+    </div>
+  </div>
+  <div class="wk" data-video="" data-vid-key="hba" data-mode="landscape" data-title="HBA Sports Center">
+    <div class="wk-vis"><div class="wk-bg wi2"></div></div>
+    <div class="wk-over"></div>
+    <div class="wk-body">
+      <div class="wk-top"><div class="wk-n">03</div><div class="wk-tag">Branding<br>Commercial</div></div>
+      <div class="wk-bot"><h3 class="wk-title">HBA Sports<br>Center</h3><div class="wk-yr">2024</div></div>
+    </div>
+  </div>
+  <div class="wk" data-video="" data-vid-key="nightlife" data-mode="portrait" data-title="Night Life">
+    <div class="wk-vis"><div class="wk-bg wi3"></div></div>
+    <div class="wk-over"></div>
+    <div class="wk-body">
+      <div class="wk-top"><div class="wk-n">04</div><div class="wk-tag">Commercial</div></div>
+      <div class="wk-bot"><h3 class="wk-title">Night<br>Life</h3><div class="wk-yr">2026</div></div>
+    </div>
+  </div>
+  <div class="wk" data-video="" data-vid-key="ppa" data-mode="landscape" data-title="PPA TOUR">
+    <div class="wk-vis"><div class="wk-bg wi8"></div></div>
+    <div class="wk-over"></div>
+    <div class="wk-body">
+      <div class="wk-top"><div class="wk-n">05</div><div class="wk-tag">Video Production<br>Photography</div></div>
+      <div class="wk-bot"><h3 class="wk-title">PPA<br>Tour</h3><div class="wk-yr">2026</div></div>
+    </div>
+  </div>
+  <div class="wk" data-video="" data-vid-key="fnb" data-mode="portrait" data-title="F&amp;B">
+    <div class="wk-vis"><div class="wk-bg wi9"></div></div>
+    <div class="wk-over"></div>
+    <div class="wk-body">
+      <div class="wk-top"><div class="wk-n">06</div><div class="wk-tag">Video Production<br>Photography</div></div>
+      <div class="wk-bot"><h3 class="wk-title">F&amp;B</h3><div class="wk-yr">2026</div></div>
+    </div>
+  </div>
+  <div class="wk" data-video="" data-vid-key="djoy" data-mode="landscape" data-title="D-JOY / TTC">
+    <div class="wk-vis"><div class="wk-bg wi11"></div></div>
+    <div class="wk-over"></div>
+    <div class="wk-body">
+      <div class="wk-top"><div class="wk-n">07</div><div class="wk-tag">Commercial<br>Branding</div></div>
+      <div class="wk-bot"><h3 class="wk-title">D-JOY<br>TTC</h3><div class="wk-yr">2026</div></div>
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- ── STATS — white section ── -->
+<section class="sec stats-sec">
+  <div class="wrap">
+    <div class="stats-row">
+      <div class="stat rv">
+        <span class="stat-n"><span class="cnt" data-to="200" data-sfx="+">0</span></span>
+        <span class="stat-lbl">Projects Delivered</span>
+      </div>
+      <div class="stat rv" style="--d:.1s">
+        <span class="stat-n"><span class="cnt" data-to="5" data-sfx="+">0</span></span>
+        <span class="stat-lbl">Years in Production</span>
+      </div>
+      <div class="stat rv" style="--d:.18s">
+        <span class="stat-n"><span class="cnt" data-to="60" data-sfx="+">0</span></span>
+        <span class="stat-lbl">Brand Partners</span>
+      </div>
+      <div class="stat rv" style="--d:.26s">
+        <span class="stat-n"><span class="cnt" data-to="99" data-sfx="%">0</span></span>
+        <span class="stat-lbl">Client Satisfaction</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── INDUSTRIES & CAPABILITIES ── -->
+<section class="ind-sec" id="capabilities">
+
+  <!-- Header -->
+  <div class="sec" style="padding-bottom:clamp(3rem,5vw,4rem)">
+    <div class="wrap">
+      <div class="rv" style="--d:.05s"><span class="lbl" style="display:block;margin-bottom:.75rem">What We Serve &amp; How We Work</span></div>
+      <h2 class="sec-title rv" style="--d:.12s;line-height:1.0">Industries &amp;<br>Capabilities</h2>
+    </div>
+  </div>
+
+  <!-- Product Lines -->
+  <div class="ind-blk">
+    <div class="wrap" style="padding-top:clamp(2.5rem,4vw,3.5rem);padding-bottom:clamp(2.5rem,4vw,3.5rem)">
+      <div class="ind-label-row rv">
+        <span class="lbl">Product Lines</span>
+        <span style="font-size:var(--t-sm);font-weight:300;color:var(--text-3)">Industries we serve</span>
+      </div>
+      <div class="tagflow rv" style="--d:.08s">
+        <span class="tf-item">Food &amp; Beverage</span><span class="tf-sep">/</span>
+        <span class="tf-item">Music</span><span class="tf-sep">/</span>
+        <span class="tf-item">Fashion</span><span class="tf-sep">/</span>
+        <span class="tf-item">Beauty &amp; Cosmetics</span><span class="tf-sep">/</span>
+        <span class="tf-item">Lifestyle</span><span class="tf-sep">/</span>
+        <span class="tf-item">Hospitality</span><span class="tf-sep">/</span>
+        <span class="tf-item">Sports</span><span class="tf-sep">/</span>
+        <span class="tf-item">Nightlife</span><span class="tf-sep">/</span>
+        <span class="tf-item">Other</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Deliverables -->
+  <div class="ind-blk">
+    <div class="wrap" style="padding-top:clamp(2.5rem,4vw,3.5rem);padding-bottom:clamp(2.5rem,4vw,3.5rem)">
+      <div class="ind-label-row rv">
+        <span class="lbl">Deliverables</span>
+        <span style="font-size:var(--t-sm);font-weight:300;color:var(--text-3)">What we produce</span>
+      </div>
+      <div class="tagflow sm rv" style="--d:.08s">
+        <span class="tf-item">Video Series</span><span class="tf-sep">/</span>
+        <span class="tf-item">TVC &amp; Brand Film</span><span class="tf-sep">/</span>
+        <span class="tf-item">Social Content</span><span class="tf-sep">/</span>
+        <span class="tf-item">Photography</span><span class="tf-sep">/</span>
+        <span class="tf-item">Mixed Media</span><span class="tf-sep">/</span>
+        <span class="tf-item">Other</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 01 Industry + 02 We Do -->
+  <div class="ind-blk">
+    <div class="wrap" style="padding-top:clamp(3rem,5vw,4.5rem);padding-bottom:clamp(3rem,5vw,4.5rem)">
+      <div class="ind-cols">
+        <!-- 01 Industry -->
+        <div>
+          <span class="ind-col-eyebrow lbl rv">01 — Industry</span>
+          <h3 class="ind-col-head rv" style="--d:.08s">Where we operate</h3>
+          <ul class="ind-list">
+            <li class="ind-li rv" style="--d:.12s">Film and Video Production</li>
+            <li class="ind-li rv" style="--d:.16s">Advertising</li>
+            <li class="ind-li rv" style="--d:.2s">Post-production</li>
+            <li class="ind-li rv" style="--d:.24s">Visual Arts</li>
+            <li class="ind-li rv" style="--d:.28s">Branding</li>
+            <li class="ind-li rv" style="--d:.32s">Photography</li>
+            <li class="ind-li rv" style="--d:.36s">Entertainment</li>
+            <li class="ind-li rv" style="--d:.4s">Event</li>
+          </ul>
+        </div>
+        <!-- 02 We Do -->
+        <div>
+          <span class="ind-col-eyebrow lbl rv" style="--d:.06s">02 — We Do</span>
+          <h3 class="ind-col-head rv" style="--d:.14s">Our craft</h3>
+          <ul class="wedo-list" aria-label="Core capabilities">
+            <li class="wedo-item rv" style="--d:.18s">Filmmaking</li>
+            <li class="wedo-item rv" style="--d:.25s">Photography</li>
+            <li class="wedo-item rv" style="--d:.32s">Art Direction</li>
+            <li class="wedo-item rv" style="--d:.39s">Prod. Design</li>
+            <li class="wedo-item rv" style="--d:.46s">Event Org.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</section>
+
+<!-- ── PROCESS ── -->
+<section class="sec" style="border-top:1px solid var(--border)" id="process">
+  <div class="wrap">
+    <div style="margin-bottom:clamp(2.5rem,4.5vw,4rem)">
+      <span class="lbl rv" style="display:block;margin-bottom:.65rem">How We Work</span>
+      <h2 class="sec-title rv" style="--d:.1s">The production process</h2>
+    </div>
+    <div class="proc-grid">
+      <div class="proc-step rv">
+        <span class="proc-num">01</span>
+        <h3 class="proc-title">Brief &amp; Discovery</h3>
+        <p class="proc-desc">We listen before we speak. A deep-dive into your brand, objectives, and audience to define the creative territory and the right approach.</p>
+      </div>
+      <div class="proc-step rv" style="--d:.1s">
+        <span class="proc-num">02</span>
+        <h3 class="proc-title">Pre-Production</h3>
+        <p class="proc-desc">Concept development, scripting, location scouting, casting, and production design. Every detail confirmed before a camera rolls.</p>
+      </div>
+      <div class="proc-step rv" style="--d:.18s">
+        <span class="proc-num">03</span>
+        <h3 class="proc-title">Production</h3>
+        <p class="proc-desc">Principal photography with our own crew and equipment. Precise direction, technical excellence, and real-time client communication.</p>
+      </div>
+      <div class="proc-step rv" style="--d:.26s">
+        <span class="proc-num">04</span>
+        <h3 class="proc-title">Post &amp; Delivery</h3>
+        <p class="proc-desc">Editing, colour grading, sound design, and motion in our own post facility — until the final master is exactly right.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── CONTACT ── -->
+<section class="sec cta-sec" id="contact">
+  <div class="wrap">
+    <div class="cta-grid">
+      <div>
+        <span class="lbl rv" style="display:block;margin-bottom:1.25rem">Start a Project</span>
+        <h2 class="cta-hl rv" style="--d:.08s">Ready to<br><em>make something</em><br>extraordinary?</h2>
+        <div class="cta-info">
+          <div class="rv" style="--d:.14s">
+            <div class="ci-lbl"><span class="lbl">HBA Production</span></div>
+          </div>
+          <div class="rv" style="--d:.18s">
+            <div class="ci-lbl"><span class="lbl">Office</span></div>
+            <div class="ci-val">824 Sư Vạn Hạnh, Phường 12<br>Quận 10, Hồ Chí Minh City<br>Vietnam</div>
+          </div>
+          <div class="rv" style="--d:.22s">
+            <div class="ci-lbl"><span class="lbl">Available Worldwide</span></div>
+            <div class="ci-val" style="font-style:italic;color:var(--text-3)">We work with clients across the globe.</div>
+          </div>
+          <div class="rv" style="--d:.26s">
+            <div class="ci-lbl"><span class="lbl">Phone</span></div>
+            <div class="ci-val">
+              <a href="tel:+84828798955">0828 798 955</a><br>
+              <a href="tel:+84906809696">0906 809 696</a>
+            </div>
+          </div>
+          <div class="rv" style="--d:.3s">
+            <div class="ci-lbl"><span class="lbl">Email</span></div>
+            <div class="ci-val"><a href="mailto:hbamediaproduction@gmail.com">hbamediaproduction@gmail.com</a></div>
+          </div>
+        </div>
+      </div>
+      <form class="form rv" style="--d:.12s" onsubmit="submitForm(event)" novalidate>
+        <div class="form-row">
+          <div class="fg">
+            <label class="flbl" for="f-name">Name</label>
+            <input class="fi" type="text" id="f-name" name="name" placeholder="Your name" required>
+          </div>
+          <div class="fg">
+            <label class="flbl" for="f-co">Company</label>
+            <input class="fi" type="text" id="f-co" name="company" placeholder="Company name">
+          </div>
+        </div>
+        <div class="fg">
+          <label class="flbl" for="f-email">Email</label>
+          <input class="fi" type="email" id="f-email" name="email" placeholder="your@email.com" required>
+        </div>
+        <div class="fg">
+          <label class="flbl" for="f-type">Project Type</label>
+          <div class="fsel-wrap">
+            <select class="fsel fi" id="f-type" name="type">
+              <option value="" disabled selected>Select a service</option>
+              <option>Filmmaking</option>
+              <option>Photography</option>
+              <option>Design</option>
+              <option>Marketing Strategy</option>
+              <option>Other</option>
+            </select>
+          </div>
+        </div>
+        <div class="fg">
+          <label class="flbl" for="f-msg">Tell us about your project</label>
+          <textarea class="fta" id="f-msg" name="message" placeholder="What are you looking to create?"></textarea>
+        </div>
+        <button type="submit" class="fsub" id="fsub">Send Message →</button>
+      </form>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<!-- ── FOOTER ── -->
+<footer class="footer">
+  <div class="wrap">
+    <div class="footer-top">
+      <div class="footer-wm">HBA Production</div>
+      <nav class="footer-nav" aria-label="Footer">
+        <a href="#work">Work</a>
+        <a href="#services">Services</a>
+        <a href="#capabilities">Capabilities</a>
+        <a href="#about">About</a>
+        <a href="#contact">Contact</a>
+      </nav>
+    </div>
+    <div class="footer-btm">
+      <span class="footer-copy">© 2024 HBA Production Co., Ltd. · Hồ Chí Minh City, Việt Nam</span>
+      <div class="footer-social">
+        <a href="#">Instagram</a>
+        <a href="#">Facebook</a>
+        <a href="#">LinkedIn</a>
+        <a href="#">YouTube</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script>
+/* ── HERO ── */
+(function(){
+  const letters = document.querySelectorAll('.hero-l');
+  const sub = document.getElementById('hs');
+  const foot = document.getElementById('hf');
+  letters.forEach((el,i) => setTimeout(()=>el.classList.add('on'), 260+i*130));
+  setTimeout(()=>sub.classList.add('on'), 260+letters.length*130+130);
+  setTimeout(()=>foot.classList.add('on'), 260+letters.length*130+400);
+})();
+
+/* ── NAV STUCK ── */
+(function(){
+  const nav = document.getElementById('nav');
+  window.addEventListener('scroll',()=>nav.classList.toggle('stuck',scrollY>50),{passive:true});
+})();
+
+/* ── SCROLL REVEAL ── */
+(function(){
+  if(!window.IntersectionObserver)return;
+  const obs = new IntersectionObserver(entries=>{
+    entries.forEach(e=>{if(e.isIntersecting){e.target.classList.add('on');obs.unobserve(e.target)}});
+  },{threshold:0.1,rootMargin:'0px 0px -28px 0px'});
+  document.querySelectorAll('.rv,.rv-up').forEach(el=>obs.observe(el));
+})();
+
+/* ── COUNTERS ── */
+(function(){
+  if(!window.IntersectionObserver)return;
+  function run(el){
+    const to=parseInt(el.dataset.to,10),sfx=el.dataset.sfx||'',dur=1800,t0=performance.now();
+    (function tick(now){
+      const p=Math.min((now-t0)/dur,1),e=1-Math.pow(1-p,3);
+      el.textContent=Math.round(e*to)+sfx;
+      if(p<1)requestAnimationFrame(tick);
+    })(t0);
+  }
+  const obs=new IntersectionObserver(entries=>{
+    entries.forEach(e=>{if(e.isIntersecting){run(e.target);obs.unobserve(e.target)}});
+  },{threshold:0.5});
+  document.querySelectorAll('.cnt').forEach(el=>obs.observe(el));
+})();
+
+/* ── FORM ── */
+function submitForm(e){
+  e.preventDefault();
+  const btn=document.getElementById('fsub');
+  btn.textContent='Message Sent ✓';
+  btn.style.background='#222';btn.style.color='#FFF';btn.disabled=true;
+}
+
+/* ── WORK ITEMS: scroll reveal + video autoplay + parallax ── */
+(function(){
+  if(!window.IntersectionObserver)return;
+
+  function extractId(raw){
+    if(!raw)return'';
+    const m=raw.match(/(?:v=|youtu\.be\/|embed\/)([A-Za-z0-9_-]{11})/);
+    return m?m[1]:raw.trim();
+  }
+
+  /* Scroll-reveal: add .vis when item enters viewport */
+  const revObs=new IntersectionObserver(entries=>{
+    entries.forEach(e=>{
+      if(e.isIntersecting)e.target.classList.add('vis');
+      else e.target.classList.remove('vis');
+    });
+  },{threshold:0.14,rootMargin:'0px 0px -4% 0px'});
+
+        /* Project video file paths */
+  const projectVideos={
+    hba:'videos/hba.mov',
+    tsn:'videos/tsn.mov',
+    franklin:'videos/franklin.mp4',
+    nightlife:'videos/nightlife.mov',
+    ppa:'videos/ppa.mp4',
+    fnb:'videos/fnb.mov',
+    djoy:'videos/djoy.mp4'
+  };
+  /* Video autoplay: inject/remove video or iframe on enter/exit */
+  const vidObs=new IntersectionObserver(entries=>{
+    entries.forEach(e=>{
+      const vis=e.target.querySelector('.wk-vis');
+      if(!vis)return;
+      const key=e.target.dataset.vidKey||'';
+      const ytUrl=e.target.dataset.video||'';
+      if(e.isIntersecting){
+        if(key&&projectVideos[key]){
+          if(!vis.querySelector('video')){
+            const v=document.createElement('video');
+            v.src=projectVideos[key];
+            v.autoplay=true;v.muted=true;v.loop=true;v.playsInline=true;
+            v.setAttribute('playsinline','');
+            vis.appendChild(v);
+          }
+        }else{
+          const id=extractId(ytUrl);
+          if(id&&!vis.querySelector('iframe')){
+            const f=document.createElement('iframe');
+            f.src='https://www.youtube.com/embed/'+id+'?autoplay=1&mute=1&loop=1&playlist='+id+'&controls=0&modestbranding=1&rel=0&playsinline=1';
+            f.allow='autoplay; encrypted-media';
+            vis.appendChild(f);
+          }
+        }
+      }else{
+        vis.querySelector('video')?.remove();
+        vis.querySelector('iframe')?.remove();
+      }
+    });
+  },{threshold:0.15});
+
+  const wks=Array.from(document.querySelectorAll('.wk'));
+  wks.forEach(el=>{revObs.observe(el);vidObs.observe(el)});
+
+  /* Parallax: background drifts at 15% of scroll speed */
+  const reduceMotion=window.matchMedia('(prefers-reduced-motion:reduce)').matches;
+  if(!reduceMotion){
+    function parallax(){
+      const wh=window.innerHeight;
+      wks.forEach(el=>{
+        const r=el.getBoundingClientRect();
+        if(r.bottom<0||r.top>wh)return;
+        const p=(wh/2-(r.top+r.height/2))/wh;
+        el.querySelector('.wk-vis').style.transform='translateY('+Math.round(p*90)+'px)';
+      });
+    }
+    window.addEventListener('scroll',parallax,{passive:true});
+    parallax();
+  }
+})();
+</script>
+
+</body></html>
